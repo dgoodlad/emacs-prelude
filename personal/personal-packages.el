@@ -1,6 +1,15 @@
 (require 'prelude-packages)
 
-(add-to-list 'prelude-packages 'evil)
-(prelude-install-packages)
+(defvar personal-packages
+  '(evil switch-window))
+
+(defun personal-install-packages ()
+  (dolist (p personal-packages)
+    (unless (package-installed-p p)
+      (package-install p))))
+
+(personal-install-packages)
+
+(require 'switch-window)
 
 (provide 'personal-packages)
