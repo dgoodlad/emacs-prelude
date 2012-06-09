@@ -10,6 +10,7 @@
 
 (personal-install-packages)
 
+(require 'evil)
 (require 'switch-window)
 
 (provide 'personal-packages)
