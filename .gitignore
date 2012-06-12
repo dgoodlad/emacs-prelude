@@ -13,3 +13,5 @@ ede-projects.el
 .DS_Store
 custom.el
 swank/
+places
+.smex-items
