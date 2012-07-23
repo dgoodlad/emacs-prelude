@@ -42,7 +42,7 @@
 (setq url-http-attempt-keepalives nil)
 
 (defvar prelude-packages
-  '(ack-and-a-half expand-region gist helm helm-projectile magit magithub melpa
+  '(ack-and-a-half expand-region gist guru-mode helm helm-projectile magit magithub melpa
                    rainbow-mode volatile-highlights yasnippet zenburn-theme)
   "A list of packages to ensure are installed at launch.")
 
@@ -67,7 +67,8 @@
 (defmacro prelude-auto-install (extension package mode)
   `(add-to-list 'auto-mode-alist
                 `(,extension . (lambda ()
-                                 (package-install ',package)
+                                 (unless (package-installed-p ',package)
+                                   (package-install ',package))
                                  (,mode)))))
 
 (defvar prelude-auto-install-alist
