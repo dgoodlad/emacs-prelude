@@ -16,3 +16,4 @@ swank/
 places
 .smex-items
 savefile/
+/prelude-modules.el
