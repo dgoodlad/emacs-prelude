@@ -1,7 +1,7 @@
 (require 'prelude-packages)
 
 (defvar personal-packages
-  '(evil switch-window))
+  '(switch-window))
 
 (defun personal-install-packages ()
   (dolist (p personal-packages)
@@ -10,7 +10,6 @@
 
 (personal-install-packages)
 
-(require 'evil)
 (require 'switch-window)
 
 (provide 'personal-packages)
