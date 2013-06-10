@@ -47,7 +47,7 @@ With a prefix ARG always prompt for command to use."
                      ((and (not arg) (member system-type '(gnu gnu/linux gnu/kfreebsd))) "xdg-open")
                      (t (read-shell-command "Open current file with: ")))
                     " "
-                    buffer-file-name))))
+                    (shell-quote-argument buffer-file-name)))))
 
 (defun prelude-buffer-mode (buffer-or-name)
   "Retrieve the `major-mode' of BUFFER-OR-NAME."
@@ -85,8 +85,10 @@ With a prefix ARG always prompt for command to use."
   "Insert an empty line above the current line.
 Position the cursor at it's beginning, according to the current mode."
   (interactive)
+  (move-beginning-of-line nil)
+  (newline-and-indent)
   (forward-line -1)
-  (prelude-smart-open-line))
+  (funcall indent-line-function))
 
 (defun prelude-smart-open-line ()
   "Insert an empty line after the current line.
@@ -94,6 +96,11 @@ Position the cursor at its beginning, according to the current mode."
   (interactive)
   (move-end-of-line nil)
   (newline-and-indent))
+
+(defun prelude-top-join-line ()
+  "Join the current line with the line beneath it."
+  (interactive)
+  (delete-indentation 1))
 
 (defun prelude-move-line-up ()
   "Move the current line up."
@@ -116,6 +123,32 @@ Passes ARG to command `kill-whole-line' when provided."
   (interactive "P")
   (kill-whole-line arg)
   (back-to-indentation))
+
+(defun prelude-move-beginning-of-line (arg)
+  "Move point back to indentation of beginning of line.
+
+Move point to the first non-whitespace character on this line.
+If point is already there, move to the beginning of the line.
+Effectively toggle between the first non-whitespace character and
+the beginning of the line.
+
+If ARG is not nil or 1, move forward ARG - 1 lines first.  If
+point reaches the beginning or end of the buffer, stop there."
+  (interactive "^p")
+  (setq arg (or arg 1))
+
+  ;; Move lines first
+  (when (/= arg 1)
+    (let ((line-move-visual nil))
+      (forward-line (1- arg))))
+
+  (let ((orig-point (point)))
+    (back-to-indentation)
+    (when (= orig-point (point))
+      (move-beginning-of-line 1))))
+
+(global-set-key [remap move-beginning-of-line]
+                'prelude-move-beginning-of-line)
 
 (defun prelude-indent-buffer ()
   "Indent the currently visited buffer."
@@ -195,9 +228,7 @@ there's a region, all lines that region covers will be duplicated."
          ((vc-backend filename) (vc-rename-file filename new-name))
          (t
           (rename-file filename new-name t)
-          (rename-buffer new-name)
-          (set-visited-file-name new-name)
-          (set-buffer-modified-p nil)))))))
+          (set-visited-file-name new-name t t)))))))
 
 (defun prelude-delete-file-and-buffer ()
   "Kill the current buffer and deletes the file it is visiting."
@@ -263,6 +294,8 @@ buffer is not visiting a file."
 (defadvice ido-find-file (after find-file-sudo activate)
   "Find file as root if necessary."
   (unless (or (equal major-mode 'dired-mode)
+              (and (buffer-file-name)
+                   (not (file-exists-p (file-name-directory (buffer-file-name)))))
               (and (buffer-file-name)
                    (file-writable-p buffer-file-name)))
     (find-alternate-file (concat "/sudo:root@localhost:" buffer-file-name))))
@@ -354,10 +387,11 @@ Doesn't mess with special buffers."
 (defun prelude-tip-of-the-day ()
   "Display a random entry from `prelude-tips'."
   (interactive)
-  ;; pick a new random seed
-  (random t)
-  (message
-   (concat "Prelude tip: " (nth (random (length prelude-tips)) prelude-tips))))
+  (unless (window-minibuffer-p)
+    ;; pick a new random seed
+    (random t)
+    (message
+     (concat "Prelude tip: " (nth (random (length prelude-tips)) prelude-tips)))))
 
 (defun prelude-eval-after-init (form)
   "Add `(lambda () FORM)' to `after-init-hook'.
@@ -377,10 +411,11 @@ Doesn't mess with special buffers."
 (defun prelude-update ()
   "Update Prelude to its latest version."
   (interactive)
-  (when (y-or-n-p "Do you want to update Prelude?")
+  (when (y-or-n-p "Do you want to update Prelude? ")
     (message "Updating Prelude...")
     (cd prelude-dir)
     (shell-command "git pull")
+    (prelude-recompile-init)
     (message "Update finished. Restart Emacs to complete the process.")))
 
 (provide 'prelude-core)
