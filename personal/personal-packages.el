@@ -1,7 +1,8 @@
 (require 'prelude-packages)
 
 (defvar personal-packages
-  '(switch-window))
+  '(switch-window
+    ag))
 
 (defun personal-install-packages ()
   (dolist (p personal-packages)

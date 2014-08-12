@@ -10,4 +10,10 @@
     (set-buffer-process-coding-system 'utf-8-unix 'utf-8-unix))
 (ad-activate 'ansi-term)
 
+;; paste in ansi-term
+(add-hook 'term-mode-hook (lambda ()
+                            (define-key term-raw-map (kbd "C-y") 'term-paste)))
+
+(global-set-key (kbd "C-x o") 'switch-window)
+
 (provide 'personal-global)
